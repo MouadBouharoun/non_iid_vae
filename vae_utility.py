@@ -5,18 +5,18 @@ import matplotlib.pyplot as plt
 
 
 '''
-Cette foncton implémente l'initialisation Glorot
-Ref : Glorot, X., & Bengio, Y. Understanding the difficulty of training deep feedforward neural networks. 
-In international conference on artificial intelligence and statistics, 2010.
-Cette fonction est conçue pour maintenir la variance des gradients relativement constante à travers les couches du VAE.
+This function implements Glorot initialization.
+Ref: Glorot, X., & Bengio, Y. Understanding the difficulty of training deep feedforward neural networks. 
+In International Conference on Artificial Intelligence and Statistics, 2010.
+This function is designed to keep the gradient variance relatively constant across the layers of the VAE.
 '''
 def glorot(in_shape):
     val = tf.random.normal(shape=in_shape, stddev=1./tf.sqrt(in_shape[0]/2.))
     return val
 
 '''
-Cette fonction définie l'architecture du VAE (see Image 1 in README.md)
-initialise les matrices de poids et les vecteurs de biais pour l'encodeur et le décodeur en utilisant l'initialisation Glorot.
+This function defines the architecture of the VAE, 
+and initializes the weight matrices and bias vectors for the encoder and decoder using Glorot initialization.
 '''
 def initialize_weights_and_biases(input_dimension, neural_network_dimension, latent_variable_dimension):
     Weight = {
@@ -36,10 +36,10 @@ def initialize_weights_and_biases(input_dimension, neural_network_dimension, lat
     return Weight, Bias
 
 '''
-L'objectif de cette fonction est de trouver les paramètres \phi de l'encodeur probabiliste (q_{\phi} ~ N(\mu, \sigma))
+The goal of this function is to find the parameters \phi of the probabilistic encoder (q_{\phi} ~ N(\mu, \sigma))
 \phi = {Weight["weight_matrix_encoder_hidden"] + Bias["bias_matrix_encoder_hidden"]}
-Les valeurs pris par \phi sont utilisé pour construire la couche (\mu, \phi); par conséquent : \mu = \mu(\phi), et \sigma = \sigma(\phi)
-les paramètres \mu, \sigma sont utilisés pour créer des échnatillons z de l'espace latent avec z ~ N(\mu, \sigma)
+The values of \phi are used to construct the layer (\mu, \phi); hence: \mu = \mu(\phi), and \sigma = \sigma(\phi)
+The parameters \mu, \sigma are used to create latent space samples z with z ~ N(\mu, \sigma)
 '''
 def encoder(x, Weight, Bias):
     encoder_layer = tf.add(tf.matmul(x, Weight["weight_matrix_encoder_hidden"]), Bias["bias_matrix_encoder_hidden"])
@@ -49,23 +49,23 @@ def encoder(x, Weight, Bias):
     return mean_layer, stddev_layer
 
 '''
-L'optimisation de la fonction de perte totale total_loss() fait intervenir deux termes dont le premier (data_fidelity) 
-représente une espérance par rapport à q_{\phi} de z. Ceci rend le calcul de la différentielle par rapport au paramètre \phi 
-n'est pas possible car $\dif_{\phi} \E_{q_{\phi}}{z} \neq \E_{\phi}{z} \dif_{\phi}$ 
-L'alternative est de remplacer q_{\phi} par une distribution normale centrée réduite \epsilon, et écrire z sous une forme linéaire 
-en epsilon z = \mu(\phi) + \epsilon \sigma(\phi).
-Dans ce cas : E_{q_{\phi}}{z} = E_{\epsilon}{\mu(\phi) + \epsilon \sigma(\phi)}
-Cette alternative est proposée dans ce papier : 
-Kingma, D. P., Salimans, T., & Welling, M. Variational dropout and the local reparameterization trick. In neural information processing systems, 2015.
+The optimization of the total loss function total_loss() involves two terms: the first (data_fidelity) 
+represents an expectation with respect to q_{\phi} of z. This makes computing the derivative with respect to \phi 
+impossible since $\dif_{\phi} \E_{q_{\phi}}{z} \neq \E_{\phi}{z} \dif_{\phi}$ 
+An alternative is to replace q_{\phi} with a centered reduced normal distribution \epsilon, and express z in a linear form 
+in epsilon z = \mu(\phi) + \epsilon \sigma(\phi).
+In this case: E_{q_{\phi}}{z} = E_{\epsilon}{\mu(\phi) + \epsilon \sigma(\phi)}
+This alternative is proposed in this paper: 
+Kingma, D. P., Salimans, T., & Welling, M. Variational dropout and the local reparameterization trick. In Neural Information Processing Systems, 2015.
 '''
 def reparameterize(mean, stddev):
     epsilon = tf.random.normal(tf.shape(stddev), dtype=tf.float32)
     return mean + tf.exp(0.5 * stddev) * epsilon
 
 '''
-L'objectif de cette fonction est de trouver les paramètres \phi de l'encodeur probabiliste (p_{\theta} ~ N(\mu, \sigma))
+The goal of this function is to find the parameters \phi of the probabilistic decoder (p_{\theta} ~ N(\mu, \sigma))
 \theta = {Weight["weight_matrix_decoder_hidden"] + Bias["bias_matrix_decoder_hidden"]}
-Cette fonction permet de reconstruire un autre vecteur à partir de l'espace latent
+This function reconstructs another vector from the latent space
             $$$$$ x -> z -> \hat{x} $$$$$
 '''
 
@@ -75,20 +75,20 @@ def decoder(z, Weight, Bias):
     decoder_output_layer = tf.add(tf.matmul(decoder_layer, Weight["weight_decoder"]), Bias["bias_decoder"])
     return decoder_output_layer
 '''
-Divergence de Kullback Leiber
+Kullback Leiber Divergence
 '''
 def kl_div_loss(original_data, reconstructed_data, mean, stddev):
     kl_div_loss = -0.5 * tf.reduce_sum(1 + stddev - tf.square(mean) - tf.exp(stddev), axis=1)
     return tf.reduce_mean(kl_div_loss)
 '''
-Erreur de reconstruction
+Reconstruction Error
 '''
 def data_fidelity_loss(original_data, reconstructed_data, mean, stddev):
     data_fidelity_loss = tf.reduce_mean(tf.square(original_data - reconstructed_data), axis=1)
     return tf.reduce_mean(data_fidelity_loss)
 
 '''
-Erreur global = Divergence de Kullback Leiber + Erreur de reconstruction
+Total loss = Kullback-Leibler divergence + Reconstruction error
 '''
 def total_loss(original_data, reconstructed_data, mean, stddev):
     data_fidelity_loss = tf.reduce_mean(tf.square(original_data - reconstructed_data), axis=1)
@@ -98,7 +98,7 @@ def total_loss(original_data, reconstructed_data, mean, stddev):
 
 
 '''
-Graphe de calcul
+The Computational graph
 '''
 
 def train_vae(x_train, epochs, batch_size, input_dimension, neural_network_dimension, latent_variable_dimension, learning_param):
@@ -137,7 +137,7 @@ def train_vae(x_train, epochs, batch_size, input_dimension, neural_network_dimen
     return (total_losses, kl_div_losses, data_fidelity_losses, Weight, Bias)
 
 '''
-Cette première fonction de test permet d'imprimer les erreurs totales pour l'ensemble de test
+This first test function prints the total errors for the test set
 '''
 def detect_malicious_modifications(x_test, Weight, Bias):
     reconstruction_errors = []
@@ -150,8 +150,8 @@ def detect_malicious_modifications(x_test, Weight, Bias):
     return reconstruction_errors
 
 '''
-Cette deuxième fonction de test permet d'imprimer une liste contenant des binaires indiquant
-si chaque point de données est considéré comme malveillant (1) ou non (0).
+This second test function prints a list containing binaries indicating
+whether each data point is considered malicious (1) or not (0).
 '''
 def detect_malicious_modifications_2(x_test, threshold, Weight, Bias):
     binary_results = []
@@ -167,12 +167,4 @@ def detect_malicious_modifications_2(x_test, threshold, Weight, Bias):
             binary_results.append(0)
     return binary_results
 
-'''
-Calcul du seuil pour l'entrainement du VAE
-'''
-def vae_threshold(losses, alpha=1):
-    m = np.mean(losses)
-    sigma = np.std(losses)
-    n = len(losses)
 
-    return m + alpha * (sigma / np.sqrt(n))
