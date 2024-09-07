@@ -12,10 +12,10 @@ from vae_utility import train_vae, detect_malicious_modifications, vae_threshold
 from utility import *
 
 '''
-Cette fonction charge un fichier de configuration dans le répertoire settings définie dans l'attribut "-s , ou --settings" et retourne 
-les paramètres définis dans ce fichier.
+This function loads a configuration file from the settings directory defined by the "-s" or "--settings" attribute 
+and returns the parameters specified in that file.
 
-Cette fonction est utilisée pour choisir le dataset volu comme shadow dataset, et main dataset
+This function is used to select the desired dataset as the shadow dataset and main dataset.
 '''
 def load_settings(settings_file):
     full_path = os.path.join("settings", settings_file)
@@ -46,9 +46,10 @@ def main(settings_file, num_clients):
         clients = [Client(client_id, data_chunk) for client_id, data_chunk in enumerate(client_data_chunks)]
         global_model = initialiseMLP(input_shape, lr=0.1)
         
-        ''' Imagine that the worker is aware of this specific property : {"feature": "FLOW_DURATION_MILLISECONDS", "value": 4294966, "comparison": ">="}
-            The client do not want any third party to gain information whether this specific property is present or absent in its training dataset.
-            Thus preserving the confidentiality of its data.
+        ''' 
+        Imagine that the worker is aware of this specific property : {"feature": "FLOW_DURATION_MILLISECONDS", "value": 4294966, "comparison": ">="}
+        The client do not want any third party to gain information whether this specific property is present or absent in its training dataset.
+        Thus preserving the confidentiality of its data.
         '''
         property_config = [
             {"feature": "FLOW_DURATION_MILLISECONDS", "value": 4294966, "comparison": ">="}
