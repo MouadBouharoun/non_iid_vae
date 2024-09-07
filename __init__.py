@@ -1,29 +1,20 @@
 import tensorflow as tf
 
-rng_seed = 1
 
-batch_size_train = 256
-batch_size_test = 64
-batch_size_tests = [32, 64, 128, 256, 512]
-max_num_batches_eval = 150
-data_aug_shadow = False
-
-injection_type = 1
-if injection_type == 1:
-    pos_w = 5
-    loss_threshold = 0.0003
-else:
-    raise NotImplementedError()
+model_id = 'mlp'
 
 
-model_id = 'resnet20'
-canary_id = 'last_layer'
-max_number_of_iters = 3000
+# FedSGD
 
-# FedAVG
-num_iter_fedAVG = 15
-learning_rate_fedAVG = 0.001
+learning_rate_fedSGD = 0.001
 
-# attack
-max_number_of_iters = 10000
 opt = tf.keras.optimizers.Adam()
+
+#VAE
+
+learning_param_VAE = 0.001
+epochs = 3000
+batch_size = 32
+neural_network_dimension = 512
+latent_variable_dimension = 2
+threshold = 1.2
