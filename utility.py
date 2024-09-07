@@ -7,7 +7,7 @@ from tensorflow.keras.models import clone_model
 
 
 '''
-Cette fonction permet de convertir tout les données du dataset sous format numérique
+This function converts non numerical features such as IPv4 Addresses into a numeric format.
 '''
 def preprocess(df):
     src_ipv4_idx = {name: idx for idx, name in enumerate(sorted(df["IPV4_SRC_ADDR"].unique()))}
@@ -24,9 +24,9 @@ def preprocess(df):
 
 
 '''
-Cette fonction permet d'initialiser les modèles
-Le premier modèle est celle utilisé en fédération
-Le deuxième modèle est effectuer pour effectuer l'attaque d'inconsistence (canary gradient attack)
+This function initializes the models.
+The first model is used in federated learning.
+The second model is designed to perform the inconsistency attack (canary gradient attack).
 '''
 def initialiseMLP(input_shape, lr=0.01):
     model = Sequential([
@@ -52,7 +52,7 @@ def initialisePropMLP(input_shape, lr=0.01):
     return model
 
 '''
-Cette fonction permet de distribuer les données uniformément sur les participants
+This function distributes the data uniformly among the participants.
 '''
 def data_distribution(data, num_clients):
     data_shuffled = data.sample(frac=1, random_state=42)
@@ -66,7 +66,7 @@ def data_distribution(data, num_clients):
     return client_data_chunks
 
 '''
-Cette fonction calcul un gradient à partir du modèle global et des données locales
+This function computes a gradient based on the global model and the local data.
 '''
 def client_update(local_model, data):
     with tf.GradientTape() as tape:
@@ -76,7 +76,7 @@ def client_update(local_model, data):
     return gradients
 
 '''
-Cette fonction permet d'agréger les gradients
+This function aggregates incoming gradients
 '''
 def server_aggregate(global_model, client_updates):
     averaged_gradients = [tf.zeros_like(var) for var in global_model.trainable_variables]
@@ -87,8 +87,8 @@ def server_aggregate(global_model, client_updates):
     return averaged_gradients
 
 '''
-Fonction pour convertir un modèle en un vecteur 1D numpy ndarray
-Utile comme étape du processing pour entrainer le VAE
+Function to convert a model into a 1D numpy ndarray vector.
+Useful as a processing step for training the VAE.
 '''
 def model_to_vector(models):
     new_models = []
@@ -103,7 +103,7 @@ def model_to_vector(models):
     return np.array(new_models).astype(np.float32)
 
 '''
-Cette fonction permet d'insérer les poids du modèle inconsistent dans les poids du modèle globale
+This function inserts the weights of the inconsistent model into the weights of the global model.
 '''
 def insert_weights_MI_to_GM(model_inconsistency, global_model):
     model_inconsistency_weights = model_inconsistency.get_weights()
@@ -116,20 +116,22 @@ def insert_weights_MI_to_GM(model_inconsistency, global_model):
     global_model.layers[0].set_weights(model_inconsistency_weights[0:2])
     return global_model
 '''
-Cette fonction permet d'extraire les poids du modèle partielle inconsistent à partir des poids du modèle globale
+This function extracts the weights of the partially inconsistent model from the weights of the global model.
 '''
 def extract_inc_weights(global_model, arch_inc_model):
     global_weights_layer_0 = global_model.layers[0].get_weights()
     global_weights_layer_1 = global_model.layers[1].get_weights()
 
-    ''' Extraire les parties spécifiques correspondant à model_inconsistency '''
+    ''' 
+    Extract the specific parts corresponding to model_inconsistency.   
+    '''
     extracted_weights_0 = global_weights_layer_0  #Les deux premières couches
     extracted_weights_1 = [
         global_weights_layer_1[0][:, :2],  
         global_weights_layer_1[1][:2]      
     ]
     '''
-    Fusionner les poids extraits
+    Merge the extracted weights.
     '''
     inc_weights = extracted_weights_0 + extracted_weights_1
     '''# Cloner la structure du modèle template pour éviter de modifier l'original'''
@@ -138,8 +140,8 @@ def extract_inc_weights(global_model, arch_inc_model):
     inc_model.set_weights(inc_weights)
     return inc_model
 '''
-Cette fonction permet de préparer une séquence de vérités de terrain (ground truth) composée de 1 et de 0, 
-où la moitié de la séquence est composée de 1 et l'autre moitié de 0.
+This function prepares a sequence of ground truth values consisting of 1s and 0s,
+where half of the sequence consists of 1s and the other half of 0s
 '''
 def ground_truth(test_size):
     if test_size % 2 != 0:
@@ -153,7 +155,7 @@ def ground_truth(test_size):
     return sequence
 
 
-"""Cette fonction crée plusieurs datasets de propriétés à partir des configurations données."""
+"""This function creates multiple property datasets from the given configurations."""
 def create_property_datasets(main_dataset, properties_config):
     property_datasets = []
     for i, config in enumerate(properties_config, start=1):
@@ -170,7 +172,7 @@ def create_property_datasets(main_dataset, properties_config):
     return property_datasets
 
 """
-Les clients sont traités comme des objets de classe ; chacun est reconnu avec un identifiant numérique, ces données locales et son modèle local.
+Clients are treated as class objects; each is identified by a numerical ID, their local data, and their local model.
 """
 class Client:
     def __init__(self, client_id, data):
